@@ -14,8 +14,7 @@
  * @author Hew Kai Feng
  * @version ver 1.3.3
  */
-import java.io.*;
-import java.util.*;
+
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -28,12 +27,6 @@ public class OrderOperation
 {
     private static final ArrayList<Order> orders = new ArrayList<Order>();
 
-    public static ArrayList<Order> getOrders()
-    {
-        return orders;
-    }
-
-    private static final String FILE_NAME = "orders_backup.txt";
     /**
      * This method will keep reprompting customer details such as their names, contact number
      * and the delivery address, these information can't be left empty and must be filled in
@@ -42,6 +35,28 @@ public class OrderOperation
      * After choosing what food customers want to add, system will store the food items into an arraylist
      * and track the amount of food items customer added.
      */
+    public static boolean isValidName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        // Check if name contains only letters, spaces, and common name characters
+        return name.matches("^[a-zA-Z\\s'-]+$");
+    }
+
+    /**
+     * Helper method to validate contact number (digits only, reasonable length)
+     * @param contactNumber the contact number to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidContactNumber(String contactNumber) {
+        if (contactNumber == null || contactNumber.trim().isEmpty()) {
+            return false;
+        }
+        // Remove spaces and check if it contains only digits with reasonable length
+        String cleanNumber = contactNumber.replaceAll("\\s+", "");
+        return cleanNumber.matches("^\\d{8,15}$"); // 8-15 digits
+    }
+
     public static void addOrder()
     {
         Scanner scanner = new Scanner(System.in);
@@ -51,16 +66,20 @@ public class OrderOperation
         boolean validName = false;
         while(!validName)
         {
-            System.out.print("Enter a valid customer name: ");
-            customerName = scanner.nextLine();
+            System.out.print("Enter a valid customer name (letters only): ");
+            customerName = scanner.nextLine().trim();
+            
             if (customerName.isEmpty())
             {
                 System.out.println("Customer name cannot be empty. Please try again.");
-                validName = false;
+            }
+            else if (!isValidName(customerName))
+            {
+                System.out.println("Invalid name! Name should contain only letters, spaces, hyphens, and apostrophes. No digits allowed.");
             }
             else
             {
-                break;
+                validName = true;
             }
         }
 
@@ -68,16 +87,20 @@ public class OrderOperation
         boolean validContactNumber = false;
         while (!validContactNumber)
         {
-            System.out.print("Enter a valid customer contact number: ");
-            customerContactNumber = scanner.nextLine();
+            System.out.print("Enter a valid customer contact number (8-15 digits): ");
+            customerContactNumber = scanner.nextLine().trim();
+            
             if (customerContactNumber.isEmpty())
             {
                 System.out.println("Customer contact number cannot be empty. Please try again.");
-                validContactNumber = false;
+            }
+            else if (!isValidContactNumber(customerContactNumber))
+            {
+                System.out.println("Invalid contact number! Please enter 8-15 digits only (spaces allowed).");
             }
             else
             {
-                break;
+                validContactNumber = true;
             }
         }
 
@@ -86,15 +109,19 @@ public class OrderOperation
         while (!validHomeAddress)
         {
             System.out.print("Enter a valid customer's home address: ");
-            customerHomeAddress = scanner.nextLine();
+            customerHomeAddress = scanner.nextLine().trim();
+            
             if (customerHomeAddress.isEmpty())
             {
                 System.out.println("Customer's home address cannot be empty. Please try again.");
-                validHomeAddress = false;
+            }
+            else if (customerHomeAddress.length() < 5)
+            {
+                System.out.println("Address too short! Please enter a complete address (minimum 5 characters).");
             }
             else
             {
-                break;
+                validHomeAddress = true;
             }
         }
 
@@ -313,17 +340,20 @@ public class OrderOperation
             boolean validName = false;
             while(!validName)
             {
-                System.out.println("Please enter your name:");
-                name=scanner.nextLine();
+                System.out.println("Please enter your name (letters only):");
+                name = scanner.nextLine().trim();
+                
                 if(name.isEmpty())
                 {
-                    System.out.println("Can't leave blank for name !");
-                    validName = false;
+                    System.out.println("Name cannot be blank!");
+                }
+                else if (!isValidName(name))
+                {
+                    System.out.println("Invalid name! Name should contain only letters, spaces, hyphens, and apostrophes. No digits allowed.");
                 }
                 else
                 {
                     validName = true;
-                    break;
                 }
             }
 
@@ -331,17 +361,20 @@ public class OrderOperation
             boolean validNumber = false;
             while(!validNumber)
             {
-                System.out.println("Please enter your contact number:");
-                contactNumber=scanner.nextLine();
+                System.out.println("Please enter your contact number (digits only):");
+                contactNumber = scanner.nextLine().trim();
+                
                 if(contactNumber.isEmpty())
                 {
-                    System.out.println("Can't leave blank for contact number !");
-                    validNumber = false;
+                    System.out.println("Contact number cannot be blank!");
+                }
+                else if (!isValidContactNumber(contactNumber))
+                {
+                    System.out.println("Invalid contact number! Please enter 8-15 digits only.");
                 }
                 else
                 {
                     validNumber = true;
-                    break;
                 }
             }
 
@@ -350,29 +383,38 @@ public class OrderOperation
             while(!validAddress)
             {
                 System.out.println("Please enter your delivery address:");
-                address = scanner.nextLine();
+                address = scanner.nextLine().trim();
+                
                 if(address.isEmpty())
                 {
-                    System.out.println("Can't leave blank for delivery address !");
-                    validAddress = false;
+                    System.out.println("Delivery address cannot be blank!");
+                }
+                else if (address.length() < 5)
+                {
+                    System.out.println("Address too short! Please enter a complete address.");
                 }
                 else
                 {
                     validAddress = true;
-                    break;
                 }
             }
 
+            boolean orderFound = false;
             for(Order i : orders)
             {
-                if (i.getCustomerName().equals(name) && i.getContactNumber().equals(contactNumber) && i.getAddress().equals(address))
+                if (i.getCustomerName().equalsIgnoreCase(name) && 
+                    i.getContactNumber().equals(contactNumber) && 
+                    i.getAddress().equalsIgnoreCase(address))
                 {
                     System.out.println("---------------This is your order---------------\n" + i);
+                    orderFound = true;
+                    break;
                 }
-                else
-                {
-                    System.out.println("No such order exists or user info is wrong");
-                }
+            }
+            
+            if (!orderFound)
+            {
+                System.out.println("No such order exists or user info is wrong");
             }
         }
     }
@@ -392,88 +434,114 @@ public class OrderOperation
         }
         else{
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Please enter your order number to update your details :");
-            int updateNumber = scanner.nextInt();
-
-            if(updateNumber < 1 || updateNumber > orders.size())
-            {
-                System.out.println("No such order number exists");
-            }else
-            {
-                Order order = orders.get(updateNumber-1);
-                System.out.println("...Below is your order...");
-                System.out.println("---------------------------------------");
-                System.out.println(order);
-                System.out.println("---------------------------------------");
-
-
-                System.out.println("Please select the part you want to update");
-                System.out.println("Enter 1 if customer name, enter 2 if contact number, enter 3 if delivery address");
-                System.out.println("Your choice:");
-                int updateChoice = scanner.nextInt();
-                scanner.nextLine();
-
-                boolean validChoice = false;
-                while(!validChoice)
-                {
-                    if (updateChoice == 1)
-                    {
-
-                        System.out.println("Enter updated customer name:");
-                        String latestName = scanner.nextLine();
-
-                        order.setCustomerName(latestName);
-                        System.out.println("System already updated your name!\n");
-
-                        validChoice = true;
-
-                        System.out.println("...Below is the full info with updated details...");
-                        System.out.println(order);
+            
+            boolean validOrderNumber = false;
+            int updateNumber = 0;
+            
+            while (!validOrderNumber) {
+                try {
+                    System.out.println("Please enter your order number to update your details (1-" + orders.size() + "):");
+                    updateNumber = scanner.nextInt();
+                    scanner.nextLine(); // consume newline
+                    
+                    if(updateNumber < 1 || updateNumber > orders.size()) {
+                        System.out.println("No such order number exists. Please enter a number between 1 and " + orders.size());
+                    } else {
+                        validOrderNumber = true;
                     }
-                    else if(updateChoice == 2)
-                    {
-                        System.out.println("Enter updated contact number:");
-                        String latestContactNumber = scanner.nextLine();
-
-                        order.setContactNumber(latestContactNumber);
-                        System.out.println("System already updated your contact number!\n");
-
-                        validChoice = true;
-
-                        System.out.println("...Below is the full info with updated details...");
-                        System.out.println(order);
-                    }
-                    else if(updateChoice == 3)
-                    {
-                        System.out.println("Enter updated contact number:");
-                        String latestDeliveryAddress = scanner.nextLine();
-
-                        order.setAddress(latestDeliveryAddress);
-                        System.out.println("System already updated your address!\n");
-
-                        validChoice = true;
-
-                        System.out.println("...Below is the full info with updated details...");
-                        System.out.println(order);
-                    }
-                    else
-                    {
-                        System.out.println("Sorry, unknown choice");
-                        validChoice = false;
-                        break;
-                    }
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input! Please enter a valid number.");
+                    scanner.nextLine(); // clear invalid input
                 }
             }
-        }
-    }
 
-    public static void saveOrder()
-    {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
-            oos.writeObject(OrderOperation.getOrders());
-            System.out.println("Orders saved successfully!");
-        } catch (IOException e) {
-            System.out.println("Error saving orders: " + e.getMessage());
+            Order order = orders.get(updateNumber-1);
+            System.out.println("...Below is your order...");
+            System.out.println("---------------------------------------");
+            System.out.println(order);
+            System.out.println("---------------------------------------");
+
+            boolean validChoice = false;
+            while(!validChoice) {
+                try {
+                    System.out.println("Please select the part you want to update:");
+                    System.out.println("1. Customer name");
+                    System.out.println("2. Contact number");
+                    System.out.println("3. Delivery address");
+                    System.out.print("Your choice: ");
+                    int updateChoice = scanner.nextInt();
+                    scanner.nextLine();
+
+                    switch(updateChoice) {
+                        case 1:
+                            boolean validNewName = false;
+                            while (!validNewName) {
+                                System.out.println("Enter updated customer name (letters only):");
+                                String latestName = scanner.nextLine().trim();
+                                
+                                if (latestName.isEmpty()) {
+                                    System.out.println("Name cannot be empty!");
+                                } else if (!isValidName(latestName)) {
+                                    System.out.println("Invalid name! Name should contain only letters, spaces, hyphens, and apostrophes.");
+                                } else {
+                                    order.setCustomerName(latestName);
+                                    System.out.println("System already updated your name!\n");
+                                    validNewName = true;
+                                }
+                            }
+                            validChoice = true;
+                            break;
+
+                        case 2:
+                            boolean validNewContact = false;
+                            while (!validNewContact) {
+                                System.out.println("Enter updated contact number (8-15 digits):");
+                                String latestContactNumber = scanner.nextLine().trim();
+                                
+                                if (latestContactNumber.isEmpty()) {
+                                    System.out.println("Contact number cannot be empty!");
+                                } else if (!isValidContactNumber(latestContactNumber)) {
+                                    System.out.println("Invalid contact number! Please enter 8-15 digits only.");
+                                } else {
+                                    order.setContactNumber(latestContactNumber);
+                                    System.out.println("System already updated your contact number!\n");
+                                    validNewContact = true;
+                                }
+                            }
+                            validChoice = true;
+                            break;
+
+                        case 3:
+                            boolean validNewAddress = false;
+                            while (!validNewAddress) {
+                                System.out.println("Enter updated delivery address:");
+                                String latestDeliveryAddress = scanner.nextLine().trim();
+                                
+                                if (latestDeliveryAddress.isEmpty()) {
+                                    System.out.println("Address cannot be empty!");
+                                } else if (latestDeliveryAddress.length() < 5) {
+                                    System.out.println("Address too short! Please enter a complete address.");
+                                } else {
+                                    order.setAddress(latestDeliveryAddress);
+                                    System.out.println("System already updated your address!\n");
+                                    validNewAddress = true;
+                                }
+                            }
+                            validChoice = true;
+                            break;
+
+                        default:
+                            System.out.println("Invalid choice! Please enter 1, 2, or 3.");
+                            break;
+                    }
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input! Please enter a valid number (1-3).");
+                    scanner.nextLine(); // clear invalid input
+                }
+            }
+            
+            System.out.println("...Below is the full info with updated details...");
+            System.out.println(order);
         }
     }
 }
